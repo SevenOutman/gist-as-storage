@@ -1,0 +1,18 @@
+{
+  "name": "gist-as-storage",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "github-api": "^3.0.0"
+  },
+  "devDependencies": {
+    "axios": "^0.18.0",
+    "whatwg-fetch": "^2.0.3"
+  }
+}
