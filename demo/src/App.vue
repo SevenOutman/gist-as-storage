@@ -2,7 +2,7 @@
   <div id="app">
     <header>
       <h1>GAS - Gist as Storage</h1>
-      <p>Enter your GitHub personal token with
+      <p>Enter your <a href="https://github.com/settings/tokens" target="_blank">GitHub personal access token</a> with
       <pre style="display: inline;background: #eee;padding: 0 5px;border-radius: 3px">gist</pre>
       scope and click 'Connect GAS'
       </p>
@@ -11,7 +11,8 @@
       <GASBrowser />
     </main>
     <footer>
-      GAS Browser by SevenOutman
+      <a href="https://github.com/SevenOutman/gist-as-storage/tree/master/demo" target="_blank">GAS Browser</a> by <a
+      href="https://github.com/SevenOutman" target="_blank">SevenOutman</a>
     </footer>
   </div>
 </template>
@@ -41,6 +42,15 @@
     overflow: hidden;
   }
 
+  a {
+    color: #41b883;
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
   #app {
     font-family: 'Avenir', Helvetica, Arial, sans-serif;
     -webkit-font-smoothing: antialiased;
@@ -52,7 +62,6 @@
     width: 100vw;
     max-width: 64rem;
     margin: 0 auto;
-
 
     display: flex;
     flex-direction: column;

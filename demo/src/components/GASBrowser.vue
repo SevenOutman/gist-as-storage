@@ -39,6 +39,10 @@
               <td>{{ entry[0]}}</td>
               <td>{{ entry[1]}}</td>
             </tr>
+            <tr>
+              <td contenteditable @change="onKeyChange"></td>
+              <td contenteditable></td>
+            </tr>
           </table>
           <p class="placeholder" v-else>No store specified</p>
         </div>
@@ -69,6 +73,9 @@
       }
     },
     methods: {
+      onKeyChange(e) {
+        console.log(e)
+      },
       log(message) {
         this.logs.push(message)
       },
@@ -115,15 +122,20 @@
         border: none;
         outline: none;
 
+
         padding: 16px;
         border-radius: 4px;
         background-color: rgb(239, 239, 239);
 
         font-size: 16px;
         font-weight: 600;
+        letter-spacing: 0.015625em;
 
         &[readonly] {
           color: #888;
+        }
+        &[type="password"] {
+          letter-spacing: .5em;
         }
 
         ::-webkit-input-placeholder {
@@ -201,8 +213,31 @@
             line-height: 1.5;
             li {
               padding-left: 1em;
+              cursor: pointer;
+              &:hover {
+                background: #f6f8fa;
+              }
               &.current {
                 background: #f6f8fa;
+                position: relative;
+                &::before {
+                  content: ' ';
+                  position: absolute;
+                  width: 6px;
+                  height: 6px;
+                  border-radius: 50%;
+                  top: 50%;
+                  left: 5px;
+                  margin-top: -3px;
+                  display: block;
+                  background: rgba(255, 255, 255, 1);
+                  box-shadow: inset 0 0 10px 2px rgba(105, 255, 135, 1), 0 0 8px 1px rgba(117, 255, 182, 1);
+                }
+              }
+            }
+            &:hover {
+              li.current:not(:hover) {
+                background-color: transparent;
               }
             }
           }
@@ -210,7 +245,7 @@
       }
 
       .table {
-        flex-grow: 1;
+        width: 50%;
         margin: 0 12px;
         .panel-body {
           padding: 15px 0;
@@ -236,6 +271,7 @@
               }
               &:last-child {
                 border-right: none;
+                width: 60%;
               }
             }
           }
