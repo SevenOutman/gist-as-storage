@@ -1,4 +1,5 @@
 import _isEqual from 'lodash.isequal';
+
 const storeFileName = storeName => `store-${storeName}.json`;
 
 class Store {
@@ -9,12 +10,20 @@ class Store {
     this._gistApi = gistApi;
   }
 
+  get name() {
+    return this._name;
+  }
+
   getItem(key) {
     return this._values[key];
   }
 
   setItem(key, value) {
     this._values[key] = value;
+  }
+
+  removeItem(key) {
+    delete this._values[key];
   }
 
   getAll() {

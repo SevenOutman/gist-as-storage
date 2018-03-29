@@ -10,17 +10,24 @@ class GAS {
 
   _isReady = false
   _readyCallbacks = []
+  _stores = {}
 
-  constructor(token, logger = console) {
+  _logger
+
+  constructor(token, logger) {
     this._ghApi = new GitHub({ token })
-    this._logger = logger;
+    this._logger = logger
     this._init()
+  }
+
+  _debug(message) {
+    this._logger && this._logger.log(message)
   }
 
   async _init() {
 
-    const ghUser = this._ghApi.getUser()
-    this._logger.log('Connecting GAS...');
+    const ghUser = this._userApi = this._ghApi.getUser()
+    this._debug('Connecting GAS...');
     const { data: gists } = await ghUser.listGists()
 
     for (let gist of gists) {
@@ -28,16 +35,25 @@ class GAS {
       if (gist.files[__GAS_JSON]) {
         this._gistApi = this._ghApi.getGist(gist.id);
 
-        const { data } = await this._gistApi.read()
-        this._db = data.files;
-        this._logger.log('GAS connected');
+        const { data: retrievedGist } = await this._gistApi.read()
+
+        this._stores = Object.keys(retrievedGist.files).reduce((stores, fileName) => {
+          if (fileName !== __GAS_JSON) {
+            const file = retrievedGist.files[fileName]
+            const storeName = fileName.match(/^store-(.*?)(?=\.json$)/)[1]
+            stores[storeName] = new Store(storeName, JSON.parse(file.content), this._gistApi)
+          }
+          return stores;
+        }, {});
+
+        this._debug('GAS connected');
         return this._fireReadyCallbacks()
       }
     }
 
     // no GAS found
     // create a new one
-    this._logger.log(`No ${__GAS_JSON} found in your Gists, creating a new GAS storage...`);
+    this._debug(`No ${__GAS_JSON} found in your Gists, creating a new GAS storage...`);
     let gistApi = this._gistApi = this._ghApi.getGist();
     await gistApi
       .create({
@@ -56,7 +72,16 @@ class GAS {
       })
 
     const { data: createdGist } = await gistApi.read()
-    this._db = createdGist.files;
+
+    this._stores = Object.keys(createdGist.files).reduce((stores, fileName) => {
+      if (fileName !== __GAS_JSON) {
+        const file = createdGist.files[fileName]
+        const storeName = fileName.match(/^store-(.*?)(?=\.json$)/)[1]
+        stores[storeName] = new Store(storeName, JSON.parse(file.content), this._gistApi)
+      }
+      return stores;
+    }, {});
+    this._debug('GAS connected');
     this._fireReadyCallbacks()
   }
 
@@ -82,37 +107,39 @@ class GAS {
     return await this.store(__STORE_DEFAULT);
   }
 
-  async store(name) {
-    const __storeFileName = storeFileName(name)
-    const storeFile = this._db[__storeFileName];
-    if (storeFile) {
-      this._logger.log(`Using store ${name}`)
-      return new Store(name, JSON.parse(storeFile.content), this._gistApi)
+  async store(name, createIfNone = false) {
+    if (this._stores[name]) {
+      this._debug(`Using store ${name}`)
+      return this._stores[name];
     }
 
-    this._logger.log(`No store named '${name}' found in your GAS, creating a new one...`);
+    if (!createIfNone) {
+      throw new Error(`No store named '${name}' found in your GAS`)
+    }
+
+    this._debug(`No store named '${name}' found in your GAS, creating a new one...`);
 
     const { data: updatedGist } = await this._gistApi
       .update({
         files: {
-          [__storeFileName]: {
+          [storeFileName(name)]: {
             description: `GAS store '${name}'`,
             content: JSON.stringify({}),
           },
         },
-      })
+      });
 
-    this._db = updatedGist.files;
-    this._logger.log(`Using store ${name}`)
-    return new Store(name, JSON.parse(this._db[__storeFileName].content), this._gistApi)
+    this._debug(`Using store ${name}`)
+    return this._stores[name] = new Store(name, {}, this._gistApi)
   }
 
   stores() {
-    return Object.keys(this._db).filter(name => name !== __GAS_JSON).map(fileName => fileName.match(/^store-(.*?)(?=\.json$)/)[1]);
+    return this._stores;
   }
 
-  async flush() {
-    return await this.store();
+  async owner() {
+    const { data: profile } = await this._userApi.getProfile()
+    return profile
   }
 }
 
