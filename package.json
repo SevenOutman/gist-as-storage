@@ -4,16 +4,26 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "build": "rollup -c",
+    "dev": "rollup -c -w",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "",
-  "license": "ISC",
+  "repository": "git@github.com:SevenOutman/gist-as-storage.git",
+  "author": "Doma<leishenghao@126.com>",
+  "license": "BSD-3-Clause-Clear",
   "dependencies": {
+    "babel-polyfill": "^6.26.0",
     "github-api": "^3.0.0",
     "lodash.isequal": "^4.5.0"
   },
   "devDependencies": {
-    "axios": "^0.18.0",
-    "whatwg-fetch": "^2.0.3"
+    "babel-cli": "^6.26.0",
+    "babel-core": "^6.26.0",
+    "babel-plugin-external-helpers": "^6.22.0",
+    "babel-plugin-transform-async-to-generator": "^6.24.1",
+    "babel-preset-env": "^1.6.1",
+    "babel-preset-stage-0": "^6.24.1",
+    "rollup": "^0.57.1",
+    "rollup-plugin-babel": "^3.0.3"
   }
 }

@@ -115,3 +115,4 @@ typings/
 
 .idea
 test.js
+dist/
