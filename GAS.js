@@ -1,5 +1,6 @@
 const axios = require('axios');
 const GitHub = require('github-api');
+const _isEqual = require('lodash.isequal');
 
 const __GAS_JSON = '__gas.json';
 const __STORE_DEFAULT = '__default';
@@ -18,14 +19,20 @@ class GAS {
           for (let gist of data) {
             // GAS found
             if (gist.files[__GAS_JSON]) {
-              this._gasGist = this._gistApi = this._ghApi.getGist(gist.id);
-              this._db = gist.files;
-              console.log('GAS connected');
-              return resolve();
+              this._gistApi = this._ghApi.getGist(gist.id);
+              this._gistApi.read()
+                .then(({ data }) => {
+                  this._db = data.files;
+                  console.debug('GAS connected');
+
+                  resolve();
+                });
+              return;
             }
           }
 
           // no GAS found
+          // create a new one
           console.debug(`No ${__GAS_JSON} found in your Gists, creating a new GAS storage...`);
           let gistApi = this._gistApi = this._ghApi.getGist();
           gistApi
@@ -34,9 +41,11 @@ class GAS {
               description: 'GAS storage',
               files: {
                 [__GAS_JSON]: {
-                  content: JSON.stringify({}),
+                  description: 'GAS config file',
+                  content: JSON.stringify({ version: '0.1.0' }),
                 },
                 [storeFileName(__STORE_DEFAULT)]: {
+                  description: 'GAS default store',
                   content: JSON.stringify({}),
                 },
               },
@@ -52,41 +61,38 @@ class GAS {
     });
   }
 
+  ready(callback) {
+    this._initPromise.then(() => {
+      callback(this);
+    });
+  }
+
   defaultStore(preload) {
     return this.store(__STORE_DEFAULT, preload);
   }
 
   store(name, preload = true) {
     return new Promise((resolve, reject) => {
-      this._initPromise.then(() => {
-        const __storeFileName = storeFileName(name)
-        const storeFile = this._db[__storeFileName];
-        if (storeFile) {
-          return axios(storeFile.raw_url)
-            .then(({ data }) => {
-              return resolve(new Store(name, data, this._gasGist));
-            })
-            .catch(reject);
-        }
-        console.log(`No store named '${name}' found in your GAS, creating a new one...`);
-        this._gasGist
-          .update({
-            files: {
-              [__storeFileName]: {
-                content: JSON.stringify({}),
-              },
+      const __storeFileName = storeFileName(name)
+      const storeFile = this._db[__storeFileName];
+      if (storeFile) {
+        return resolve(new Store(name, JSON.parse(storeFile.content), this._gistApi));
+      }
+      console.log(`No store named '${name}' found in your GAS, creating a new one...`);
+      this._gistApi
+        .update({
+          files: {
+            [__storeFileName]: {
+              description: `GAS store '${name}'`,
+              content: JSON.stringify({}),
             },
-          })
-          .then(({ data }) => {
-            this._db = data.files;
-            return axios(this._db[__storeFileName].raw_url)
-              .then(({ data }) => {
-                return resolve(new Store(name, data, this._gasGist));
-              })
-              .catch(reject);
-          })
-          .catch(reject);
-      })
+          },
+        })
+        .then(({ data }) => {
+          this._db = data.files;
+          return resolve(new Store(name, JSON.parse(this._db[__storeFileName].content), this._gistApi));
+        })
+        .catch(reject);
     });
   }
 }
@@ -95,7 +101,8 @@ class GAS {
 class Store {
   constructor(name, values, gistApi) {
     this._name = name;
-    this._values = values;
+    this._oldValues = values;
+    this._values = { ...values };
     this._gistApi = gistApi;
   }
 
@@ -108,11 +115,15 @@ class Store {
   }
 
   flush() {
+    if (_isEqual(this._oldValues, this._values)) {
+      return Promise.resolve(this);
+    }
+
     return this._gistApi
       .update({
         files: {
           [storeFileName(this._name)]: {
-            content: JSON.stringify(this._values),
+            content: JSON.stringify(this._oldValues),
           },
         },
       });
