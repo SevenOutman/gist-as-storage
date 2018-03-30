@@ -2,17 +2,19 @@
   <div id="app">
     <header>
       <h1>GAS - Gist as Storage</h1>
-      <p>Enter your <a href="https://github.com/settings/tokens" target="_blank">GitHub personal access token</a> with
-      <pre style="display: inline;background: #eee;padding: 0 5px;border-radius: 3px">gist</pre>
-      scope and click 'Connect GAS'
+      <p>
+        Server-less, charge-free, space-unlimited storage for every GitHub user
       </p>
     </header>
     <main>
       <GASBrowser />
     </main>
     <footer>
-      <a href="https://github.com/SevenOutman/gist-as-storage/tree/master/demo" target="_blank">GAS Browser</a> by <a
-      href="https://github.com/SevenOutman" target="_blank">SevenOutman</a>
+      <a href="https://github.com/SevenOutman/gist-as-storage" target="_blank">Documentation</a>
+      ·
+      <a href="https://github.com/SevenOutman/gist-as-storage" target="_blank">GitHub</a>
+      ·
+      <a href="https://github.com/SevenOutman/gist-as-storage" target="_blank">How it works?</a>
     </footer>
   </div>
 </template>
@@ -55,7 +57,6 @@
     font-family: 'Avenir', Helvetica, Arial, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    text-align: center;
     color: #2c3e50;
 
     height: 100vh;
@@ -67,6 +68,7 @@
     flex-direction: column;
     header {
       padding-top: 54px;
+      text-align: center;
     }
     main {
       flex-grow: 1;
@@ -75,6 +77,7 @@
 
     footer {
       padding: 24px;
+      text-align: center;
     }
   }
 </style>

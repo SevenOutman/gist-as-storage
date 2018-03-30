@@ -2,8 +2,9 @@
   <div class="gas-browser">
     <div class="toolbar">
       <!--<div class="logo">GAS Browser</div>-->
-      <input type="text" id="token" placeholder="Token" v-model="token">
-      <button type="button" @click="connectGAS">Connect GAS</button>
+      <input type="text" id="token" placeholder="Enter your GitHub personal access token with 'gist' scope"
+             v-model="token">
+      <button type="button" @click="connectGAS" :disabled="!token.length">Connect GAS</button>
     </div>
     <div class="panels">
       <div class="panel stores">
@@ -35,13 +36,18 @@
               <th>Key</th>
               <th>Value</th>
             </tr>
-            <tr v-for="(entry, index) of currentStore.getAll()" :key="index">
+            <tr v-for="(entry, index) of Object.entries(currentStore.getAll())" :key="index">
               <td>{{ entry[0]}}</td>
               <td>{{ entry[1]}}</td>
             </tr>
             <tr>
-              <td contenteditable @change="onKeyChange"></td>
-              <td contenteditable></td>
+              <td class="new">
+                <input type="text" v-model="newKey" @keydown.enter="onNewItem">
+              </td>
+              <td class="new">
+                <input type="text" v-model="newValue" :readonly="!newKey" @keydown.enter="onNewItem"
+                       @keydown.tab.prevent="onNewItem">
+              </td>
             </tr>
           </table>
           <p class="placeholder" v-else>No store specified</p>
@@ -54,6 +60,12 @@
         </div>
       </div>
     </div>
+    <div class="footer">
+      <a href="https://github.com/SevenOutman/gist-as-storage/tree/master/demo" target="_blank">
+        GAS Browser by SevenOutman
+      </a>
+      · Version {{version}}
+    </div>
   </div>
 </template>
 
@@ -64,17 +76,23 @@
     name: 'GASBrowser',
     data() {
       return {
+        version: VERSION,
         token: '',
         owner: null,
         logs: [],
         stores: [],
         entries: [],
-        currentStore: null
+        currentStore: null,
+
+        newKey: '',
+        newValue: '',
       }
     },
     methods: {
-      onKeyChange(e) {
-        console.log(e)
+      onNewItem() {
+        this.currentStore.setItem(this.newKey, this.newValue)
+        this.newKey = ''
+        this.newValue = ''
       },
       log(message) {
         this.logs.push(message)
@@ -86,15 +104,12 @@
             this.owner = await gas.owner()
             this.log('GAS connected')
             this.stores = gas.stores()
-
-            const store1 = await gas.store('store1')
-            store1.setItem('app', 'GAS Browser')
           })
       },
     },
     mounted() {
       this.log(`GAS browser launched at ${new Date()}`)
-    }
+    },
   }
 </script>
 
@@ -121,7 +136,6 @@
         -webkit-appearance: none;
         border: none;
         outline: none;
-
 
         padding: 16px;
         border-radius: 4px;
@@ -155,21 +169,28 @@
 
         font-weight: 600;
 
-        cursor: pointer;
-
         color: #fff;
         border: 1px solid rgba(27, 31, 35, 0.2);
         user-select: none;
         background: #28a745 linear-gradient(-180deg, #34d058 0%, #28a745 90%) repeat-x -1px -1px;
         background-size: 110% 110%;
-        &:hover {
-          background: #269f42 linear-gradient(-180deg, #2fcb53 0%, #269f42 90%) -.5em;
-          border-color: rgba(27, 31, 35, 0.5);
+
+        &[disabled] {
+          opacity: .5;
         }
-        &:active {
-          background: #279f43 none;
-          border-color: rgba(27, 31, 35, 0.5);
-          box-shadow: inset 0 0.15em 0.3em rgba(27, 31, 35, .15);
+        &:not([disabled]) {
+          cursor: pointer;
+
+          &:hover {
+            background: #269f42 linear-gradient(-180deg, #2fcb53 0%, #269f42 90%) -.5em;
+            border-color: rgba(27, 31, 35, 0.5);
+          }
+
+          &:active {
+            background: #279f43 none;
+            border-color: rgba(27, 31, 35, 0.5);
+            box-shadow: inset 0 0.15em 0.3em rgba(27, 31, 35, .15);
+          }
         }
       }
     }
@@ -188,6 +209,7 @@
 
         .panel-header {
           height: 24px;
+          line-height: 24px;
           padding: 0 10px;
           background-color: #eee;
         }
@@ -254,9 +276,6 @@
             border-spacing: 0;
             border-collapse: collapse;
             margin-top: -15px;
-            tr:nth-child(odd):not(:first-child) {
-              background: #f6f8fa;
-            }
             th,
             td {
               padding: 0 10px;
@@ -273,6 +292,16 @@
                 border-right: none;
                 width: 60%;
               }
+
+              &.new {
+                padding: 0;
+                input {
+                  height: 100%;
+                  width: 100%;
+                  padding: 0 10px;
+                  border: none;
+                }
+              }
             }
           }
         }
@@ -284,6 +313,20 @@
             margin-top: 0;
             font-family: monospace;
           }
+        }
+      }
+    }
+    .footer {
+      border-bottom: 1px solid #eee;
+      font-size: 14px;
+      padding: 5px 0;
+      color: #ccc;
+
+      a {
+        color: #ccc;
+        &:hover {
+          color: #41b883;
+          text-decoration: none;
         }
       }
     }
