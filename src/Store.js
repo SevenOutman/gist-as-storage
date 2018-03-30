@@ -27,11 +27,15 @@ class Store {
   }
 
   getAll() {
-    return Object.entries(this._values);
+    return { ...this._values };
+  }
+
+  hasChanged() {
+    return !_isEqual(this._oldValues, this._values);
   }
 
   async flush() {
-    if (_isEqual(this._oldValues, this._values)) {
+    if (!this.hasChanged()) {
       return this;
     }
 
