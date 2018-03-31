@@ -29,6 +29,10 @@
       <div class="panel table">
         <div class="panel-header">
           Store {{ currentStore && currentStore.name }}
+          <template v-if="currentStoreDiff">
+            - {{ Object.keys(currentStoreDiff.added).length}} added, {{ Object.keys(currentStoreDiff.changed).length}} changed, {{ Object.keys(currentStoreDiff.removed).length}} removed
+            <a href role="button" tabindex="-1" @click.prevent="commitStoreChanges">commit changes</a>
+          </template>
         </div>
         <div class="panel-body">
           <table v-if="currentStore">
@@ -36,7 +40,14 @@
               <th>Key</th>
               <th>Value</th>
             </tr>
-            <tr v-for="(entry, index) of Object.entries(currentStore.getAll())" :key="index">
+            <tr
+              v-for="(entry, index) of Object.entries(currentStore.getAll())"
+              :key="index"
+              :class="{
+                'added': currentStoreDiff && currentStoreDiff.added[entry[0]],
+                'changed': currentStoreDiff && currentStoreDiff.changed[entry[0]]
+              }"
+            >
               <td>{{ entry[0]}}</td>
               <td>{{ entry[1]}}</td>
             </tr>
@@ -84,6 +95,8 @@
         entries: [],
         currentStore: null,
 
+        currentStoreDiff: null,
+
         newKey: '',
         newValue: '',
       }
@@ -93,6 +106,7 @@
         this.currentStore.setItem(this.newKey, this.newValue)
         this.newKey = ''
         this.newValue = ''
+        this.currentStoreDiff = this.currentStore.diff()
       },
       log(message) {
         this.logs.push(message)
@@ -106,9 +120,15 @@
             this.stores = gas.stores()
           })
       },
+      async commitStoreChanges() {
+        if (this.currentStore) {
+          await this.currentStore.flush()
+          this.currentStoreDiff = this.currentStore.diff()
+        }
+      }
     },
     mounted() {
-      this.log(`GAS browser launched at ${new Date()}`)
+      this.log(`GAS Browser launched at ${new Date()}`)
     },
   }
 </script>
@@ -276,6 +296,15 @@
             border-spacing: 0;
             border-collapse: collapse;
             margin-top: -15px;
+
+            tr {
+              &.added {
+                background-color: rgba(0, 255, 0, .1);
+              }
+              &.changed {
+                background-color: rgba(0, 0, 255, .1);
+              }
+            }
             th,
             td {
               padding: 0 10px;
