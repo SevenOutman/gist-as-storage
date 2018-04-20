@@ -1,13 +1,13 @@
 <template>
   <div id="app">
     <header>
-      <h1>GAS - Gist as Storage</h1>
-      <p>
+      <h1>Gistore</h1>
+      <h2>
         Server-less, charge-free, space-unlimited storage for every GitHub user
-      </p>
+      </h2>
     </header>
     <main>
-      <GASBrowser />
+      <gistore-gui />
     </main>
     <footer>
       <a href="https://github.com/SevenOutman/gist-as-storage" target="_blank">Documentation</a>
@@ -20,12 +20,12 @@
 </template>
 
 <script>
-  import GASBrowser from './components/GASBrowser';
+  import GistoreGUI from './components/GUI';
 
   export default {
     name: 'App',
     components: {
-      GASBrowser,
+      'gistore-gui': GistoreGUI,
     },
   }
 </script>
@@ -67,8 +67,29 @@
     display: flex;
     flex-direction: column;
     header {
-      padding-top: 54px;
       text-align: center;
+
+      h1 {
+        font-size: 48px;
+        position: relative;
+        display: inline-block;
+        margin-bottom: 0;
+        &::before {
+          content: '';
+          background-image: url(./assets/logo.png);
+          position: absolute;
+          left: -53px;
+          top: 0;
+          height: 48px;
+          width: 48px;
+          background-size: contain;
+          display: block;
+        }
+      }
+      h2 {
+        margin-top: 0;
+        font-weight: normal;
+      }
     }
     main {
       flex-grow: 1;

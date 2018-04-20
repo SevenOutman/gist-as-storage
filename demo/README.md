@@ -1,6 +1,6 @@
-# GAS Browser
+# Gistore GUI
 
-> Official [GAS](https://github.com/SevenOutman/gist-as-storage) demonstration
+> Official [Gistore](https://github.com/SevenOutman/gist-as-storage) demonstration
 
 ## Todo
 - Mutating store values

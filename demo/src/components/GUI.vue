@@ -1,15 +1,20 @@
 <template>
   <div class="gas-browser">
-    <div class="toolbar">
-      <!--<div class="logo">GAS Browser</div>-->
-      <input type="text" id="token" placeholder="Enter your GitHub personal access token with 'gist' scope"
-             v-model="token">
-      <button type="button" @click="connectGAS" :disabled="!token.length">Connect GAS</button>
-    </div>
+
     <div class="panels">
+      <div class="overlay" v-show="!token">
+        <div style="margin: 0 auto 200px; text-align: center">
+          <p>You need to</p>
+          <button type="button" @click="requireOAuth">
+            <svg class="octicon octicon-mark-github" viewBox="0 0 16 16" version="1.1" width="24" height="24" aria-hidden="true"><path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"></path></svg>
+            <span>Login with GitHub</span>
+          </button>
+          <p>to connect to your Gistore.</p>
+        </div>
+      </div>
       <div class="panel stores">
         <div class="panel-header">
-          GAS
+          Connection
         </div>
         <div class="panel-body">
           <ul v-if="owner">
@@ -23,14 +28,15 @@
               {{ store.name }}
             </li>
           </ul>
-          <p class="placeholder" v-else>No GAS Connection</p>
+          <p class="placeholder" v-else>No Gistore Connection</p>
         </div>
       </div>
       <div class="panel table">
         <div class="panel-header">
           Store {{ currentStore && currentStore.name }}
           <template v-if="currentStoreDiff">
-            - {{ Object.keys(currentStoreDiff.added).length}} added, {{ Object.keys(currentStoreDiff.changed).length}} changed, {{ Object.keys(currentStoreDiff.removed).length}} removed
+            - {{ Object.keys(currentStoreDiff.added).length}} added, {{ Object.keys(currentStoreDiff.changed).length}}
+            changed, {{ Object.keys(currentStoreDiff.removed).length}} removed
             <a href role="button" tabindex="-1" @click.prevent="commitStoreChanges">commit changes</a>
           </template>
         </div>
@@ -73,7 +79,7 @@
     </div>
     <div class="footer">
       <a href="https://github.com/SevenOutman/gist-as-storage/tree/master/demo" target="_blank">
-        GAS Browser by SevenOutman
+        Gistore GUI by SevenOutman
       </a>
       · Version {{version}}
     </div>
@@ -81,14 +87,15 @@
 </template>
 
 <script>
-  import GAS from 'gist-as-storage'
+  import GAS from 'gistore'
+  import Authenticator from 'netlify-auth-providers'
 
   export default {
-    name: 'GASBrowser',
+    name: 'GistoreGUI',
     data() {
       return {
         version: VERSION,
-        token: '',
+        token: localStorage.getItem('access_token'),
         owner: null,
         logs: [],
         stores: [],
@@ -111,6 +118,19 @@
       log(message) {
         this.logs.push(message)
       },
+      requireOAuth() {
+        new Authenticator({ site_id: 'gistore.netlify.com' }).authenticate({
+          provider: 'github',
+          scope: 'gist'
+        }, (err, data) => {
+          if (err) {
+            console.log(err)
+            return
+          }
+          this.token = data.token
+          localStorage.setItem('access_token', this.token)
+        })
+      },
       connectGAS() {
         this.log('Connecting GAS...')
         this.gas = new GAS(this.token)
@@ -125,10 +145,13 @@
           await this.currentStore.flush()
           this.currentStoreDiff = this.currentStore.diff()
         }
-      }
+      },
     },
     mounted() {
-      this.log(`GAS Browser launched at ${new Date()}`)
+      this.log(`Gistore Browser launched at ${new Date()}`)
+      if (this.token) {
+        this.connectGAS()
+      }
     },
   }
 </script>
@@ -140,7 +163,29 @@
     display: flex;
     flex-direction: column;
 
-    .toolbar {
+    position: relative;
+    .overlay {
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
+
+      display: flex;
+      align-items: center;
+
+      background-color: rgba(255, 255, 255, .7);
+
+      .octicon {
+        margin-right: 10px;
+        vertical-align: middle;
+        display: inline-block;
+        fill: currentColor;
+      }
+
+    }
+
+    .toolbar, .overlay {
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -185,7 +230,8 @@
         border-radius: 4px;
         padding: 16px;
         font-size: 16px;
-        margin-left: 12px;
+
+        line-height: 24px;
 
         font-weight: 600;
 
@@ -194,6 +240,10 @@
         user-select: none;
         background: #28a745 linear-gradient(-180deg, #34d058 0%, #28a745 90%) repeat-x -1px -1px;
         background-size: 110% 110%;
+
+        span {
+          vertical-align: middle;
+        }
 
         &[disabled] {
           opacity: .5;

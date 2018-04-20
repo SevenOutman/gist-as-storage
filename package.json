@@ -6,7 +6,8 @@
   "scripts": {
     "build": "rollup -c",
     "dev": "rollup -c -w",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "predeploy": "npm run build && node demo/build/build.js"
   },
   "repository": "git@github.com:SevenOutman/gist-as-storage.git",
   "author": "Doma<leishenghao@126.com>",
@@ -14,7 +15,9 @@
   "dependencies": {
     "babel-polyfill": "^6.26.0",
     "github-api": "^3.0.0",
-    "lodash.isequal": "^4.5.0"
+    "lodash.isequal": "^4.5.0",
+    "netlify-auth-providers": "^1.0.0-alpha5",
+    "primer": "^10.4.0"
   },
   "devDependencies": {
     "babel-cli": "^6.26.0",
