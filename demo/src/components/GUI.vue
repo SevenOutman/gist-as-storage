@@ -89,6 +89,8 @@
 <script>
   import GAS from 'gistore'
   import Authenticator from 'netlify-auth-providers'
+  import 'primer-buttons/build/build.css'
+  import OAuth from '../lib/github-oauth';
 
   export default {
     name: 'GistoreGUI',
@@ -119,24 +121,19 @@
         this.logs.push(message)
       },
       requireOAuth() {
-        new Authenticator({ site_id: 'gistore.netlify.com' }).authenticate({
-          provider: 'github',
-          scope: 'gist'
-        }, (err, data) => {
-          if (err) {
-            console.log(err)
-            return
-          }
-          this.token = data.token
-          localStorage.setItem('access_token', this.token)
-        })
+        this.oauth.login()
+          .then(token => {
+            this.token = token
+            localStorage.setItem('access_token', this.token)
+            this.connectGAS()
+          })
       },
       connectGAS() {
-        this.log('Connecting GAS...')
+        this.log('Connecting Gistore...')
         this.gas = new GAS(this.token)
           .ready(async (gas) => {
             this.owner = await gas.owner()
-            this.log('GAS connected')
+            this.log('Gistore connected')
             this.stores = gas.stores()
           })
       },
@@ -147,8 +144,15 @@
         }
       },
     },
+    created() {
+      this.oauth = new OAuth({
+        client_id: '5a7b68743d01773e750f',
+        client_secret: 'e1bd48caeae771e255c447b2658626bf103748c4',
+        scopes: ['gist']
+      })
+    },
     mounted() {
-      this.log(`Gistore Browser launched at ${new Date()}`)
+      this.log(`Gistore GUI launched at ${new Date()}`)
       if (this.token) {
         this.connectGAS()
       }
@@ -224,46 +228,9 @@
         }
       }
       button {
-
-
-        -webkit-appearance: none;
-        outline: none;
-
-        border-radius: 4px;
         padding: 16px;
         font-size: 16px;
-
         line-height: 24px;
-
-        font-weight: 600;
-
-        color: #fff;
-        border: 1px solid rgba(27, 31, 35, 0.2);
-        user-select: none;
-        background: #28a745 linear-gradient(-180deg, #34d058 0%, #28a745 90%) repeat-x -1px -1px;
-        background-size: 110% 110%;
-
-        span {
-          vertical-align: middle;
-        }
-
-        &[disabled] {
-          opacity: .5;
-        }
-        &:not([disabled]) {
-          cursor: pointer;
-
-          &:hover {
-            background: #269f42 linear-gradient(-180deg, #2fcb53 0%, #269f42 90%) -.5em;
-            border-color: rgba(27, 31, 35, 0.5);
-          }
-
-          &:active {
-            background: #279f43 none;
-            border-color: rgba(27, 31, 35, 0.5);
-            box-shadow: inset 0 0.15em 0.3em rgba(27, 31, 35, .15);
-          }
-        }
       }
     }
     .panels {
@@ -412,8 +379,4 @@
       }
     }
   }
-</style>
-<style lang="scss">
-  @import "~primer-buttons/index";
-
 </style>

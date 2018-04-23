@@ -16,8 +16,7 @@
     "babel-polyfill": "^6.26.0",
     "github-api": "^3.0.0",
     "lodash.isequal": "^4.5.0",
-    "netlify-auth-providers": "^1.0.0-alpha5",
-    "primer": "^10.4.0"
+    "netlify-auth-providers": "^1.0.0-alpha5"
   },
   "devDependencies": {
     "babel-cli": "^6.26.0",
