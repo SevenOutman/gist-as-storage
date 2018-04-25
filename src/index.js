@@ -1,2 +1,2 @@
 import 'babel-polyfill';
-export default from './GAS';
+export default from './Gistore';

@@ -6,7 +6,11 @@
         <div style="margin: 0 auto 200px; text-align: center">
           <p>You need to</p>
           <button type="button" class="btn btn-primary" @click="requireOAuth">
-            <svg class="octicon octicon-mark-github" viewBox="0 0 16 16" version="1.1" width="24" height="24" aria-hidden="true"><path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"></path></svg>
+            <svg class="octicon octicon-mark-github" viewBox="0 0 16 16" version="1.1" width="24" height="24"
+                 aria-hidden="true">
+              <path fill-rule="evenodd"
+                    d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"></path>
+            </svg>
             <span>Login with GitHub</span>
           </button>
           <p>to connect to your Gistore.</p>
@@ -14,11 +18,11 @@
       </div>
       <div class="panel stores">
         <div class="panel-header">
-          Connection
+          Connection{{ owner && `(${owner.login})` }}
         </div>
         <div class="panel-body">
           <ul v-if="owner">
-            {{ owner.login }}
+            Stores
             <li
               v-for="store of stores"
               :key="store.name"
@@ -27,13 +31,22 @@
             >
               {{ store.name }}
             </li>
+            Files
+            <li
+              v-for="file of files"
+              :key="file.name"
+              :class="{'current': file === currentStore}"
+              @click="currentStore = store"
+            >
+              {{ file.name }}
+            </li>
           </ul>
           <p class="placeholder" v-else>No Gistore Connection</p>
         </div>
       </div>
       <div class="panel table">
         <div class="panel-header">
-          Store {{ currentStore && currentStore.name }}
+          Preview {{ currentStore && currentStore.name }}
           <template v-if="currentStoreDiff">
             - {{ Object.keys(currentStoreDiff.added).length}} added, {{ Object.keys(currentStoreDiff.changed).length}}
             changed, {{ Object.keys(currentStoreDiff.removed).length}} removed
@@ -87,7 +100,7 @@
 </template>
 
 <script>
-  import GAS from 'gistore'
+  import Gistore from 'gistore'
   import Authenticator from 'netlify-auth-providers'
   import 'primer-buttons/build/build.css'
   import OAuth from '../lib/github-oauth';
@@ -101,6 +114,7 @@
         owner: null,
         logs: [],
         stores: [],
+        files: [],
         entries: [],
         currentStore: null,
 
@@ -125,16 +139,17 @@
           .then(token => {
             this.token = token
             localStorage.setItem('access_token', this.token)
-            this.connectGAS()
+            this.connectGistore()
           })
       },
-      connectGAS() {
+      connectGistore() {
         this.log('Connecting Gistore...')
-        this.gas = new GAS(this.token)
-          .ready(async (gas) => {
-            this.owner = await gas.owner()
+        this.gistore = new Gistore({ token: this.token })
+          .ready(async (gistore) => {
+            this.owner = await gistore.owner()
             this.log('Gistore connected')
-            this.stores = gas.stores()
+            this.stores = gistore.stores()
+            this.files = gistore.files()
           })
       },
       async commitStoreChanges() {
@@ -154,7 +169,7 @@
     mounted() {
       this.log(`Gistore GUI launched at ${new Date()}`)
       if (this.token) {
-        this.connectGAS()
+        this.connectGistore()
       }
     },
   }

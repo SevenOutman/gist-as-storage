@@ -3,9 +3,9 @@ import babel from 'rollup-plugin-babel'
 export default {
   input: 'src/index.js',
   output: {
-    file: 'dist/GAS.js',
+    file: 'dist/Gistore.js',
     format: 'cjs',
-    name: 'GAS',
+    name: 'Gistore',
     sourcemap: true,
   },
   external: [

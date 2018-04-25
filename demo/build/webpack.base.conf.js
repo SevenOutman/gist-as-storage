@@ -34,7 +34,7 @@ module.exports = {
   resolve: {
     extensions: ['.js', '.vue', '.json'],
     alias: {
-      'gistore': resolve('../dist/GAS.js'),
+      'gistore': resolve('../dist/Gistore.js'),
       'vue$': 'vue/dist/vue.esm.js',
       '@': resolve('src'),
     },
